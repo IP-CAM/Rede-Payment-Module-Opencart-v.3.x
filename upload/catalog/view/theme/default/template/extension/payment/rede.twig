@@ -1,0 +1,60 @@
+<link rel="stylesheet" type="text/css" href="catalog/view/theme/default/stylesheet/rede.css"/>
+<script
+        src="https://code.jquery.com/jquery-2.2.4.min.js"
+        integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+        crossorigin="anonymous"></script>
+<script type="text/javascript" src="catalog/view/theme/default/javascript/jquery.validate.js"></script>
+<script type="text/javascript" src="catalog/view/theme/default/javascript/rede.js"></script>
+
+<form class="formulario" id="formulario" method="post" action="{{ action }}">
+    <div class="rede">
+        <legend>Pagar com a Rede</legend>
+
+        <ul>
+            <li>
+                <img src="catalog/view/theme/default/image/rede.jpg" style="max-width: 400px;" alt="Bandeiras">
+            </li>
+            <li>
+                <label>Número do cartão</label>
+                <input type="text" step="0" name="card_number" id="card_number" required class="required input"/>
+            </li>
+            <li>
+                <label>Nome no Cartão</label>
+                <input type="text" name="holder_name" id="holder_name" required class="required input"/>
+            </li>
+            <li>
+                <label>Data de Validade</label>
+                <select name="card_expiration_month" id="card_expiration_month" required class="required input">
+                    {% for month in 1..12 %}
+                        <option value='{{ "%02d"|format(month) }}'{% if month == current_month %} selected{% endif %}>{{ "%02d"|format(month) }}</option>
+                    {% endfor %}
+                </select> /
+                <select name="card_expiration_year" id="card_expiration_year" required class="required input">
+                    {% for year in years %}
+                        <option value="{{ year }}"{% if year == current_year %} selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </li>
+
+            <li>
+                <label>Código de segurança (CVV)</label>
+                <input type="text" step="0" name="card_cvv" id="card_cvv" size="4" required class="required input"/>
+            </li>
+
+            {% if installments %}
+                <li>
+                    <label>Parcelas</label>
+                    <select name="card_installments" id="card_installments" required class="required input">
+                        {% for installment in installments %}
+                            <option value="{{ installment.value }}">{{ installment.name }}</option>
+                        {% endfor %}
+                    </select>
+                </li>
+            {% endif %}
+
+            <li>
+                <button id="credit-card" name="submit" type="submit"><i id="submit-spinner" class="fa fa-spinner" style="display:none; margin-right: 6px;"></i>Pagar</button>
+            </li>
+        </ul>
+    </div>
+</form>

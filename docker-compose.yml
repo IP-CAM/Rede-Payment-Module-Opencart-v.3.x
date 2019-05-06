@@ -1,0 +1,31 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:5.6
+    container_name: "mysql.opencart"
+    environment:
+    - MYSQL_ROOT_PASSWORD=opencart
+    - MYSQL_DATABASE=opencart
+    - MYSQL_USER=opencart
+    - MYSQL_PASSWORD=opencart
+    networks:
+    - userede
+    volumes:
+    - ./mysql:/var/lib/mysql:z
+    ports:
+      - "3306:3306"
+
+  php:
+    image: opencart:3.3
+    build: .
+    container_name: "local.opencart"
+    ports:
+    - "80:80"
+    links:
+    - mysql
+    networks:
+    - userede
+
+networks:
+  userede:
+    driver: bridge

@@ -1,0 +1,152 @@
+{% if transaction_id is empty %}
+    {% if return_message is empty %}
+        <p>Não existem dados para esse pedido</p>
+    {% else %}
+        <table class="table table-striped table-bordered">
+            <caption>Detalhes da transação</caption>
+
+            <tr>
+                <td class="left key">Código de Retorno</td>
+                <td class="right value">{{ return_code }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">Mensagem de Retorno</td>
+                <td class="right value">{{ return_message }}</td>
+            </tr>
+        </table>
+    {% endif %}
+{% else %}
+    <table class="table table-striped table-bordered">
+        <caption>Detalhes da transação</caption>
+
+        <tr>
+            <td class="left key">ID da Transação</td>
+            <td class="right value">{{ transaction_id }}</td>
+        </tr>
+
+        {% if payment_method %}
+            <tr>
+                <td class="left key">Método de autorização</td>
+                <td class="right value">{{ payment_method_text }}</td>
+            </tr>
+        {% endif %}
+
+        <tr>
+            <td class="left key">Referência</td>
+            <td class="right value">{{ order_id }}</td>
+        </tr>
+
+        {% if installments %}
+            <tr>
+                <td class="left key">Parcelas</td>
+                <td class="right value">{{ installments }}</td>
+            </tr>
+        {% endif %}
+
+
+        {% if bin %}
+            <tr>
+                <td class="left key">BIN</td>
+                <td class="right value">{{ bin }}</td>
+            </tr>
+        {% endif %}
+        {% if last4 %}
+            <tr>
+                <td class="left key">Últimos 4 dígitos</td>
+                <td class="right value">{{ last4 }}</td>
+            </tr>
+        {% endif %}
+    </table>
+
+    <table class="table table-striped table-bordered">
+        <caption>Detalhes da autorização</caption>
+
+        <tr>
+            <td class="left key">Data e hora da autorização</td>
+            <td class="right value">{{ authorization_datetime|date("d/m/Y h:i:s") }}</td>
+        </tr>
+
+        {% if authorization_code %}
+            <tr>
+                <td class="left key">Código da autorização</td>
+                <td class="right value">{{ authorization_code }}</td>
+            </tr>
+        {% endif %}
+
+        {% if nsu and payment_method == "authorize_capture" %}
+            <tr>
+                <td class="left key">Nsu</td>
+                <td class="right value">{{ nsu }}</td>
+            </tr>
+        {% endif %}
+
+        <tr>
+            <td class="left key">Código de Retorno</td>
+            <td class="right value">{{ return_code_authorization }}</td>
+        </tr>
+
+        <tr>
+            <td class="left key">Mensagem de Retorno</td>
+            <td class="right value">{{ return_message_authorization }}</td>
+        </tr>
+    </table>
+
+    {% if capture_datetime %}
+        <table class="table table-striped table-bordered">
+            <caption>Detalhes da captura</caption>
+
+            <tr>
+                <td class="left key">Data e hora da captura</td>
+                <td class="right value">{{ capture_datetime|date("d/m/Y h:i:s") }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">Nsu</td>
+                <td class="right value">{{ nsu }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">Código de Retorno</td>
+                <td class="right value">{{ return_code_capture }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">Mensagem de Retorno</td>
+                <td class="right value">{{ return_message_capture }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    {% if cancelment_datetime %}
+        <table class="table table-striped table-bordered">
+            <caption>Detalhes do cancelamento</caption>
+
+            <tr>
+                <td class="left key">Data e hora do cancelamento</td>
+                <td class="right value">{{ cancelment_datetime|date("d/m/Y h:i:s") }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">ID Cancelamento</td>
+                <td class="right value">{{ refund_id }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">Código de Retorno</td>
+                <td class="right value">{{ return_code_cancelment }}</td>
+            </tr>
+
+            <tr>
+                <td class="left key">Mensagem de Retorno</td>
+                <td class="right value">{{ return_message_cancelment }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    <style type="text/css">
+        td.left.key {
+            width: 200px;
+        }
+    </style>
+{% endif %}

@@ -1,0 +1,5 @@
+.idea
+vendor
+mysql
+composer.lock
+opencart.ocmod.zip
