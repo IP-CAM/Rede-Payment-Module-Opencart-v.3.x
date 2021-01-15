@@ -16,20 +16,25 @@ input[type=number]::-webkit-outer-spin-button {
     margin-top: 5px;
 }
 
-.rede {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #CCC;
-    text-align: center;
+.rede .payment_method {
+    display: inline-block;
+    font-weight: bold;
+    line-height: 1em;
+    vertical-align: middle;
+    margin: 0;
 }
 
-.rede legend {
-    font-weight: bold;
-    font-size: 14px;
-    text-align: center;
-    color: #666;
-    width: 100%;
-    margin-bottom: 20px
+.rede label.payment_method {
+    margin: 0 0 0 5px;
 }
+
+.rede .payment_method_title {
+    text-align: center;
+    margin-bottom: 3em;
+}
+
+/* ------------------- */
+
 
 .rede {
     text-align: left;
@@ -38,12 +43,6 @@ input[type=number]::-webkit-outer-spin-button {
     margin: 10px;
     border: 1px solid #CCC;
     border-radius: 5px;
-}
-
-.rede legend {
-    font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 10px;
 }
 
 .rede label {
@@ -89,18 +88,21 @@ input[type=number]::-webkit-outer-spin-button {
     opacity: 0.6;
 }
 
-.rede ul li {
+.rede li {
     margin: 15px auto;
     width: 400px;
     list-style: none;
 }
 
-.rede #card_cvv {
+.rede #credit_card_cvv,
+.rede #debit_card_cvv {
     width: 50px;
 }
 
-.rede #card_number,
-.rede #holder_name,
-.rede #card_installments {
+.rede #credit_card_number,
+.rede #credit_holder_name,
+.rede #credit_card_installments,
+.rede #debit_card_number,
+.rede #debit_holder_name {
     width: 400px;
 }

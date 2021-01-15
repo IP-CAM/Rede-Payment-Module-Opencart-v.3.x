@@ -18,6 +18,7 @@ class ModelExtensionPaymentRede extends Model
             `can_capture` INT(1) NOT NULL,
             `can_cancel` INT(1) NOT NULL,
             `payment_method`  VARCHAR(32) NOT NULL,
+            `authorization_method`  VARCHAR(32) NOT NULL,
             
             `return_code_authorization` VARCHAR(32) NOT NULL,
             `return_message_authorization` VARCHAR(255) NOT NULL,

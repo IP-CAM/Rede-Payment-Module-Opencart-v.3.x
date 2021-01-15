@@ -1,4 +1,10 @@
 <?php
+
+use Rede\eRede;
+use Rede\ThreeDSecure;
+use Rede\Transaction;
+use Rede\Url;
+
 require 'upload/system/storage/vendor/autoload.php';
 
 class ModelExtensionPaymentRede extends Model
@@ -26,8 +32,8 @@ class ModelExtensionPaymentRede extends Model
             $tid = isset($query->row['transaction_id']) ? $query->row['transaction_id'] : '';
             $exception = null;
 
-            $transaction = (new \Rede\eRede($this->store(), $this->logger()))->cancel(
-                (new \Rede\Transaction($amount))->setTid($tid)
+            $transaction = (new eRede($this->store(), $this->logger()))->cancel(
+                (new Transaction($amount))->setTid($tid)
             );
 
             $refund_id = $transaction->getRefundId();
@@ -61,8 +67,8 @@ class ModelExtensionPaymentRede extends Model
             $tid = isset($query->row['transaction_id']) ? $query->row['transaction_id'] : '';
             $exception = null;
 
-            $transaction = (new \Rede\eRede($this->store(), $this->logger()))->capture(
-                (new \Rede\Transaction($amount))->setTid($tid)
+            $transaction = (new eRede($this->store(), $this->logger()))->capture(
+                (new Transaction($amount))->setTid($tid)
             );
 
             $nsu = $transaction->getNsu();
@@ -84,20 +90,43 @@ class ModelExtensionPaymentRede extends Model
         return $transaction;
     }
 
+    private function validateCardNumber($card_number)
+    {
+        $card_number_checksum = '';
+
+        foreach (str_split(strrev(preg_replace('/[^\d]/', '', $card_number))) as $i => $d) {
+            $card_number_checksum .= $i % 2 !== 0 ? $d * 2 : $d;
+        }
+
+        if (array_sum(str_split($card_number_checksum)) % 10 !== 0) {
+            $this->get_logger()->debug("Número do cartão é inválido");
+
+            throw new Exception('Por favor, informe um número válido de cartão de crédito');
+        }
+
+        return true;
+    }
+
     public function createTransaction($post, $amount)
     {
-        extract($_POST);
+        if (!isset($_POST['payment_method']) || ($_POST['payment_method'] !== 'credit' && $_POST['payment_method'] !== 'debit')) {
+            throw new Exception('Método de pagamento inválido');
+        }
 
+        $card_number = $_POST['card_number'];
+        $card_cvv = (int)$_POST['card_cvv'];
+        $card_expiration_month = (int)$_POST['card_expiration_month'];
+        $card_expiration_year = (int)$_POST['card_expiration_year'];
+        $holder_name = filter_var($_POST['holder_name'], FILTER_SANITIZE_STRING);
+        $card_installments = (int)isset($_POST['card_installments']) ? $_POST['card_installments'] : 1;
+        $payment_method = $_POST['payment_method'] === 'credit' ? 'credit' : 'debit';
         $reference = $this->session->data['order_id'];
+        $authorization_method = $this->config->get('payment_rede_method');
         $cancel = 1;
-        $payment_method = $this->config->get('payment_rede_method');
-        $capture = $payment_method === 'authorize_capture';
+        $capture = $payment_method == 'credit' && $authorization_method === 'authorize_capture';
         $store = $this->store();
 
-        $transaction = new \Rede\Transaction($amount, $reference + time());
-
-        $transaction->creditCard($card_number, $card_cvv, $card_expiration_month, $card_expiration_year, $holder_name);
-        $transaction->capture($capture);
+        $transaction = new Transaction($amount, $reference + time());
 
         $gateway = $this->config->get('payment_rede_gateway');
         $module = $this->config->get('payment_rede_module');
@@ -111,17 +140,29 @@ class ModelExtensionPaymentRede extends Model
             $transaction->setSoftDescriptor($softDescriptor);
         }
 
-        $card_installments = (int)$card_installments;
-        $card_installments = $card_installments < 1 || $card_installments > $this->config->get('payment_rede_max_installments') ? 1 : $card_installments;
+        if ($payment_method == 'credit') {
+            $transaction->creditCard($card_number, $card_cvv, $card_expiration_month, $card_expiration_year,
+                $holder_name);
+            $transaction->capture($capture);
 
-        if ($card_installments > 1) {
-            $transaction->setInstallments($card_installments);
+            $card_installments = (int)$card_installments;
+            $card_installments = $card_installments < 1 || $card_installments > $this->config->get('payment_rede_max_installments') ? 1 : $card_installments;
+
+            if ($card_installments > 1) {
+                $transaction->setInstallments($card_installments);
+            }
+        } else {
+            $transaction->debitCard($card_number, $card_cvv, $card_expiration_month, $card_expiration_year,
+                $holder_name);
+            $transaction->threeDSecure(ThreeDSecure::DECLINE_ON_FAILURE);
+            $transaction->addUrl($this->url->link('extension/payment/rede/mpi', '', 'SSL') . '&order_id=' . $this->session->data['order_id'], Url::THREE_D_SECURE_SUCCESS);
+            $transaction->addUrl($this->url->link('extension/payment/rede/mpi', '', 'SSL') . '&order_id=' . $this->session->data['order_id'], Url::THREE_D_SECURE_FAILURE);
         }
 
         $exception = null;
 
         try {
-            $transaction = (new \Rede\eRede($store, $this->logger()))->create($transaction);
+            $transaction = (new eRede($store, $this->logger()))->create($transaction);
         } catch (Exception $e) {
             $exception = $e;
         }
@@ -139,6 +180,7 @@ class ModelExtensionPaymentRede extends Model
           `can_capture`,
           `can_cancel`,
           `payment_method`,
+          `authorization_method`,
           `return_code_authorization`,
           `return_message_authorization`,
           `authorization_datetime`
@@ -155,10 +197,11 @@ class ModelExtensionPaymentRede extends Model
             '"' . !$capture . '",' .
             '"' . $cancel . '",' .
             '"' . $payment_method . '",' .
+            '"' . $authorization_method . '",' .
             '"' . $transaction->getReturnCode() . '",' .
             '"' . $transaction->getReturnMessage() . '",' .
-            '"' . date( 'Y-m-d H:i:s') . '"' .
-        ")");
+            '"' . date('Y-m-d H:i:s') . '"' .
+            ")");
 
         if ($exception !== null) {
             throw $exception;
@@ -173,6 +216,7 @@ class ModelExtensionPaymentRede extends Model
 
         if (class_exists('\Monolog\Logger')) {
             $logger = new \Monolog\Logger('rede');
+            $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stderr', \Monolog\Logger::DEBUG));
             $logger->pushHandler(new \Monolog\Handler\StreamHandler(DIR_LOGS . 'rede.log', \Monolog\Logger::DEBUG));
             $logger->info('Log Rede');
         }
@@ -194,7 +238,8 @@ class ModelExtensionPaymentRede extends Model
     private function store()
     {
         $environment = $this->environment();
-        $store = new \Rede\Store($this->config->get('payment_rede_pv'), $this->config->get('payment_rede_token'), $environment);
+        $store = new \Rede\Store($this->config->get('payment_rede_pv'), $this->config->get('payment_rede_token'),
+            $environment);
 
         return $store;
 

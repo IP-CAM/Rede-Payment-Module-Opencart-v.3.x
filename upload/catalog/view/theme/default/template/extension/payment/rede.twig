@@ -7,54 +7,96 @@
 <script type="text/javascript" src="catalog/view/theme/default/javascript/rede.js"></script>
 
 <form class="formulario" id="formulario" method="post" action="{{ action }}">
-    <div class="rede">
-        <legend>Pagar com a Rede</legend>
+    <ul class="rede">
+        <li class="payment_method_title">
+            <h3>Pague com a Rede</h3>
+            <img class="issuers" src="catalog/view/theme/default/image/rede.jpg" style="max-width: 400px;" alt="Bandeiras">
+        </li>
 
-        <ul>
-            <li>
-                <img src="catalog/view/theme/default/image/rede.jpg" style="max-width: 400px;" alt="Bandeiras">
-            </li>
-            <li>
-                <label>Número do cartão</label>
-                <input type="text" step="0" name="card_number" id="card_number" required class="required input"/>
-            </li>
-            <li>
-                <label>Nome no Cartão</label>
-                <input type="text" name="holder_name" id="holder_name" required class="required input"/>
-            </li>
-            <li>
-                <label>Data de Validade</label>
-                <select name="card_expiration_month" id="card_expiration_month" required class="required input">
-                    {% for month in 1..12 %}
-                        <option value='{{ "%02d"|format(month) }}'{% if month == current_month %} selected{% endif %}>{{ "%02d"|format(month) }}</option>
-                    {% endfor %}
-                </select> /
-                <select name="card_expiration_year" id="card_expiration_year" required class="required input">
-                    {% for year in years %}
-                        <option value="{{ year }}"{% if year == current_year %} selected{% endif %}>{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </li>
+        <li class="credit">
+            <input id="payment_method_credit" type="radio" name="payment_method" value="credit" class="payment_method" checked>
+            <label class="payment_method" for="payment_method_credit">Cartão de crédito</label>
 
-            <li>
-                <label>Código de segurança (CVV)</label>
-                <input type="text" step="0" name="card_cvv" id="card_cvv" size="4" required class="required input"/>
-            </li>
+            <div class="payment_form credit">
+                <ul>
+                    <li>
+                        <label for="credit_card_number">Número do cartão</label>
+                        <input type="text" step="0" name="credit_card_number" id="credit_card_number" class="required input"/>
+                    </li>
+                    <li>
+                        <label for="credit_holder_name">Nome no Cartão</label>
+                        <input type="text" name="holder_name" id="credit_card_holder_name" class="required input"/>
+                    </li>
+                    <li>
+                        <label>Data de Validade</label>
+                        <select name="card_expiration_month" id="credit_card_expiration_month" class="required input">
+                            {% for month in 1..12 %}
+                                <option value='{{ "%02d"|format(month) }}'{% if month == current_month %} selected{% endif %}>{{ "%02d"|format(month) }}</option>
+                            {% endfor %}
+                        </select> /
+                        <select name="card_expiration_year" id="credit_card_expiration_year" class="required input">
+                            {% for year in years %}
+                                <option value="{{ year }}"{% if year == current_year %} selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </li>
 
-            {% if installments %}
-                <li>
-                    <label>Parcelas</label>
-                    <select name="card_installments" id="card_installments" required class="required input">
-                        {% for installment in installments %}
-                            <option value="{{ installment.value }}">{{ installment.name }}</option>
-                        {% endfor %}
-                    </select>
-                </li>
-            {% endif %}
+                    <li>
+                        <label for="credit_card_cvv">Código de segurança (CVV)</label>
+                        <input type="text" step="0" name="card_cvv" id="credit_card_cvv" size="4" class="required input"/>
+                    </li>
 
-            <li>
-                <button id="credit-card" name="submit" type="submit"><i id="submit-spinner" class="fa fa-spinner" style="display:none; margin-right: 6px;"></i>Pagar</button>
-            </li>
-        </ul>
-    </div>
+                    {% if installments %}
+                        <li>
+                            <label for="credit_card_installments">Parcelas</label>
+                            <select name="card_installments" id="credit_card_installments" class="required input">
+                                {% for installment in installments %}
+                                    <option value="{{ installment.value }}">{{ installment.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </li>
+        <li class="debit">
+            <input id="payment_method_debit" type="radio" name="payment_method" value="debit" class="payment_method">
+            <label class="payment_method" for="payment_method_debit">Cartão de débito</label>
+
+            <div class="payment_form debit">
+                <ul>
+                    <li>
+                        <label for="debit_card_number">Número do cartão</label>
+                        <input type="text" step="0" name="card_number" id="debit_card_number" class="required input"/>
+                    </li>
+                    <li>
+                        <label for="debit_holder_name">Nome no Cartão</label>
+                        <input type="text" name="holder_name" id="debit_card_holder_name" class="required input"/>
+                    </li>
+                    <li>
+                        <label>Data de Validade</label>
+                        <select name="card_expiration_month" id="debit_card_expiration_month" class="required input">
+                            {% for month in 1..12 %}
+                                <option value='{{ "%02d"|format(month) }}'{% if month == current_month %} selected{% endif %}>{{ "%02d"|format(month) }}</option>
+                            {% endfor %}
+                        </select> /
+                        <select name="card_expiration_year" id="debit_card_expiration_year" class="required input">
+                            {% for year in years %}
+                                <option value="{{ year }}"{% if year == current_year %} selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </li>
+
+                    <li>
+                        <label for="debit_card_cvv">Código de segurança (CVV)</label>
+                        <input type="text" step="0" name="card_cvv" id="debit_card_cvv" size="4" class="required input"/>
+                    </li>
+                </ul>
+            </div>
+        </li>
+
+        <li class="form_submit">
+            <button class="rede_submit" name="submit" type="submit"><i id="submit-spinner" class="fa fa-spinner" style="display:none; margin-right: 6px;"></i>Pagar</button>
+        </li>
+    </ul>
 </form>

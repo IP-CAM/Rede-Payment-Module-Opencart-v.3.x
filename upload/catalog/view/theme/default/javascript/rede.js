@@ -1,66 +1,33 @@
 (function ($) {
     $(document).ready(
         function () {
-            $.validator.addMethod("holdername", function(value, element) {
-                return this.optional(element) || /^[a-zA-Z\s]*$/.test(value);
-            });
-
-            $(".formulario").validate({
-                rules: {
-                    card_number: {
-                        required: true,
-                        creditcard: true,
-                        number: true
-                    },
-                    holder_name: {
-                        required: true,
-                        holdername: true
-                    },
-                    card_expiration_month: {
-                        required: true
-                    },
-                    card_expiration_year: {
-                        required: true
-                    },
-                    card_cvv: {
-                        required: true,
-                        number: true
-                    }
-                },
-                messages: {
-                    card_number: "Por favor, informe o número do cartão",
-                    holder_name: "Por favor, informe o nome do cartão",
-                    card_expiration_month: "Por favor, informe o mês de expiracão do cartão",
-                    card_expiration_year: "Por favor, informe o ano de expiracão do cartão",
-                    card_cvv: "Por favor, informe o código de segurança do cartão",
-                },
-                errorClass: "validation-error",
-                errorElement: "span"
-            });
-
             $('.formulario').submit(function (e) {
+                var active_payment_method = $('input.payment_method:checked').val();
+                var form = $('.formulario');
+
                 e.preventDefault();
 
-                $('#credit-card').attr("disabled", "disabled");
-                $('#credit-card').toggleClass('disabled');
+                form.attr("disabled", "disabled");
+                form.toggleClass('disabled');
                 $('#submit-spinner').show();
-
 
                 $.ajax({
                     type: "POST",
-                    url: $('.formulario').attr('action'),
+                    url: form.attr('action'),
                     dataType: 'json',
                     data: {
-                        card_number: $('#card_number').val(),
-                        holder_name: $('#holder_name').val(),
-                        card_expiration_year: $('#card_expiration_year').val(),
-                        card_expiration_month: $('#card_expiration_month').val(),
-                        card_cvv: $('#card_cvv').val(),
-                        card_installments: $('#card_installments').val()
+                        payment_method: active_payment_method,
+                        card_number: $('#' + active_payment_method + '_card_number').val(),
+                        holder_name: $('#' + active_payment_method + '_card_holder_name').val(),
+                        card_expiration_year: $('#' + active_payment_method + '_card_expiration_year').val(),
+                        card_expiration_month: $('#' + active_payment_method + '_card_expiration_month').val(),
+                        card_cvv: $('#' + active_payment_method + '_card_cvv').val(),
+                        card_installments: $('#' + active_payment_method + '_card_installments').val()
                     },
                     success: function (data) {
-                        $('#credit-card').removeAttr("disabled");
-                        $('#credit-card').toggleClass('disabled');
+                        form.removeAttr("disabled");
+                        form.toggleClass('disabled');
+
                         $('#submit-spinner').hide();
 
                         if (data.error !== undefined) {
@@ -73,5 +40,20 @@
                     }
                 });
             });
+
+            const show_form = (active) => {
+                let active_payment_method = active;
+                let inactive_payment_method = active_payment_method === 'credit' ? 'debit' : 'credit';
+
+                $('.payment_method_title .issuers').attr('src', 'catalog/view/theme/default/image/rede_' + active + '.jpg');
+                $('.payment_form.' + active_payment_method).show()
+                $('.payment_form.' + inactive_payment_method).hide();
+            };
+
+            $('input.payment_method').change(function () {
+                show_form($(this).val());
+            })
+
+            show_form('credit');
         });
 })(jQuery);

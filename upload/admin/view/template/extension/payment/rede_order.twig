@@ -1,6 +1,6 @@
 {% if transaction_id is empty %}
     {% if return_message is empty %}
-        <p>Não existem dados para esse pedido</p>
+        <p>Não existem dados disponíveis</p>
     {% else %}
         <table class="table table-striped table-bordered">
             <caption>Detalhes da transação</caption>
@@ -27,8 +27,15 @@
 
         {% if payment_method %}
             <tr>
-                <td class="left key">Método de autorização</td>
+                <td class="left key">Método de pagamento</td>
                 <td class="right value">{{ payment_method_text }}</td>
+            </tr>
+        {% endif %}
+
+        {% if authorization_method %}
+            <tr>
+                <td class="left key">Método de autorização</td>
+                <td class="right value">{{ authorization_method_text }}</td>
             </tr>
         {% endif %}
 
@@ -74,7 +81,7 @@
             </tr>
         {% endif %}
 
-        {% if nsu and payment_method == "authorize_capture" %}
+        {% if nsu %}
             <tr>
                 <td class="left key">Nsu</td>
                 <td class="right value">{{ nsu }}</td>

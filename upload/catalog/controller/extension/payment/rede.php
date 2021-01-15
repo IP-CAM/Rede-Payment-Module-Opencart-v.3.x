@@ -1,4 +1,5 @@
 <?php
+require 'upload/system/storage/vendor/autoload.php';
 
 class ControllerExtensionPaymentRede extends Controller
 {
@@ -46,6 +47,64 @@ class ControllerExtensionPaymentRede extends Controller
         $data['installments'] = $installments;
 
         return $this->load->view('extension/payment/rede', $data);
+    }
+
+    public function mpi()
+    {
+        $response = new stdClass();
+        $response->redirect = $this->url->link('checkout/failure', '', 'SSL');
+
+        if (isset($_GET['order_id']) && isset($_POST['returnCode']) && isset($_POST['returnMessage'])) {
+            $order_id = $_GET['order_id'];
+            $return_code = filter_var($_POST['returnCode'], FILTER_SANITIZE_STRING);
+            $return_message = filter_var($_POST['returnMessage'], FILTER_SANITIZE_STRING);
+            $transaction_id = isset($_POST['tid']) ? filter_var($_POST['tid'], FILTER_SANITIZE_STRING) : '';
+            $authorization_code = isset($_POST['authorizationCode']) ? filter_var($_POST['authorizationCode'],
+                FILTER_SANITIZE_STRING) : '';
+            $nsu = isset($_POST['nsu']) ? filter_var($_POST['nsu'], FILTER_SANITIZE_STRING) : '';
+            $comment = sprintf('Rede[%s]: %s', $return_code, $return_message);
+            $status = 8;
+
+            if ($return_code == '00') {
+                $status = 2;
+                $response->redirect = $this->url->link('checkout/success', '', 'SSL');
+            }
+
+            if (isset($_POST['threeDSecure_returnCode'])) {
+                $return_code = filter_var($_POST['threeDSecure_returnCode'], FILTER_SANITIZE_STRING);
+            }
+
+            if (isset($_POST['threeDSecure_returnMessage'])) {
+                $return_message = filter_var($_POST['threeDSecure_returnMessage'], FILTER_SANITIZE_STRING);
+            }
+
+            $this->db->query(sprintf(
+                    'UPDATE `%serede` SET
+                    `transaction_id`="%s",
+                    `authorization_code`="%s",
+                    `nsu`="%s",
+                    `can_capture`=0,
+                    `authorization_datetime`="%s",
+                    `return_code_authorization`="%s",
+                    `return_message_authorization`="%s"
+                    WHERE `id_order`="%s";',
+                    DB_PREFIX,
+                    $transaction_id,
+                    $authorization_code,
+                    $nsu,
+                    date('Y-m-d H:i:s'),
+                    $return_code,
+                    $return_message,
+                    $order_id)
+            );
+
+            $this->load->model('checkout/order');
+            $this->load->model('extension/payment/rede');
+
+            $this->model_checkout_order->addOrderHistory($order_id, $status, $comment);
+        }
+
+        $this->response->redirect($response->redirect);
     }
 
     public function validate()
@@ -197,11 +256,15 @@ class ControllerExtensionPaymentRede extends Controller
                     $status = 10;
                 }
 
+                if ($return_code == '220') {
+                    $status = 1;
+                }
+
                 $comment = sprintf('Rede[%s]: %s', $transaction->getReturnCode(), $transaction->getReturnMessage());
 
                 $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $status, $comment);
 
-                if ($transaction->getReturnCode() !== '00') {
+                if ($return_code !== '00' && $return_code !== '220') {
                     $error = 'Não foi possível processar seu pagamento.';
                     $error .= ' Por favor, confira os dados ou tente novamente com um outro cartão.';
 
@@ -219,7 +282,13 @@ class ControllerExtensionPaymentRede extends Controller
                 }
 
                 $success = new stdClass();
-                $success->redirect = $this->url->link('checkout/success', '', 'SSL');
+                $success->redirect = $this->url->link('checkout/failure', '', 'SSL');
+
+                if ($return_code === '220') {
+                    $success->redirect = $transaction->getThreeDSecure()->getUrl();
+                } else {
+                    $success->redirect = $this->url->link('checkout/success', '', 'SSL');
+                }
 
                 $this->response->addHeader('Content-Type: application/json');
                 $this->response->setOutput(json_encode($success));
@@ -228,7 +297,8 @@ class ControllerExtensionPaymentRede extends Controller
                 $error->error = 'Não foi possível concluir seu pedido. Por favor, ente novamente em alguns instantes.';
                 $error->redirect = $this->url->link('checkout/checkout', '', 'SSL');
 
-                $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], 10, sprintf('Rede[%s]: %s', $e->getCode(), $e->getMessage()));
+                $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], 10,
+                    sprintf('Rede[%s]: %s', $e->getCode(), $e->getMessage()));
 
                 $this->response->addHeader('Content-Type: application/json');
                 $this->response->setOutput(json_encode($error));

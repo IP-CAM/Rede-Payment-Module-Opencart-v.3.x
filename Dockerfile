@@ -1,4 +1,4 @@
-FROM php:7-apache
+FROM php:7.3-apache
 
 ENV COMPOSER_HOME=/var/www/composer
 
@@ -21,13 +21,13 @@ run chown -R 1000.1000 /var/www
 RUN chmod ug=rwx+s /var/www
 
 USER 1000
-RUN wget https://github.com/opencart/opencart/releases/download/3.0.3.2/opencart-3.0.3.2.zip -P /var/www/
-RUN unzip /var/www/opencart-3.0.3.2.zip -d /var/www/opencart
+RUN wget https://github.com/opencart/opencart/releases/download/3.0.3.6/opencart-3.0.3.6.zip -P /var/www/
+RUN unzip /var/www/opencart-3.0.3.6.zip -d /var/www/opencart
 RUN cp -R /var/www/opencart/upload/* /var/www/html
 RUN cp /var/www/opencart/composer.json /var/www/html
 RUN mv /var/www/html/config-dist.php /var/www/html/config.php
 RUN mv /var/www/html/admin/config-dist.php /var/www/html/admin/config.php
-RUN rm /var/www/opencart-3.0.3.2.zip
+RUN rm /var/www/opencart-3.0.3.6.zip
 RUN rm -rf /var/www/opencart
 
 RUN composer install --no-dev

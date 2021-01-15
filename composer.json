@@ -5,11 +5,11 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "require": {
-    "php": ">=5.6",
+    "php": ">=7.2",
     "ext-curl": "*",
     "ext-json": "*",
     "psr/log": "^1.1",
-    "developersrede/erede-php": "^4.2",
+    "developersrede/erede-php": "^5",
     "monolog/monolog": "^1.24"
   },
   "require-dev": {

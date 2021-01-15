@@ -1,4 +1,5 @@
 <?php
+require '../upload/system/storage/vendor/autoload.php';
 
 class ControllerExtensionPaymentRede extends Controller
 {
@@ -112,8 +113,24 @@ class ControllerExtensionPaymentRede extends Controller
         $data['order_id'] = $order_id;
 
         if (isset($data['payment_method'])) {
-            $data['payment_method_text'] = $data['payment_method'] == 'authorize_capture' ? 'Autorização com captura automática' : 'Somente autorização';
+            $data['payment_method_text'] = 'Crédito';
+
+            error_log($data['payment_method']);
+
+            if ($data['payment_method'] == 'debit') {
+                $data['payment_method_text'] = 'Débito';
+            }
         }
+
+        if (isset($data['authorization_method'])) {
+            $data['authorization_method_text'] = $data['authorization_method'] == 'authorize_capture' ? 'Autorização com captura automática' : 'Somente autorização';
+        }
+
+        $logger = new \Monolog\Logger('rede');
+        $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stderr', \Monolog\Logger::DEBUG));
+        $logger->info('Log Rede');
+
+        $logger->info('Order', $data);
 
         return $this->load->view('extension/payment/rede_order', $data);
     }
