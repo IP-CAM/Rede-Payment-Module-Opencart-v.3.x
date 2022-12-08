@@ -3,6 +3,13 @@
 Também é possível fazer o download da [última release](https://github.com/DevelopersRede/opencart3/releases/latest/download/opencart.ocmod.zip
 ). Essa versão já contém as dependências, então basta descompactar o pacote e enviá-lo para o servidor da plataforma.
 
+# Funcionalidades
+
+Este plugin possui as seguintes funcionalidades:
+* autorização com captura direta ou posterior
+* captura
+* cancelamento
+
 # Módulo Opencart 3
 
 Esse módulo é suportado pelas versões 3.0.x e os requisitos são os mesmo da respectiva versão da plataforma.
